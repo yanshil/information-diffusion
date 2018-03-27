@@ -95,11 +95,11 @@ class Post(object):
             self.length += 1 
 
 class DataLoader(object):
-    def __init__(self):
+    def __init__(self, NETWORK_FILE_DIR = None, DIFFUSION_FILE_DIR = None, NETWORK_CONSTRAINT_FILE_DIR = None, PAGE_RANK_FILE_DIR = None ):
         self.TIME_STEP = -1
-        self.NETWORK_FILE_DIR = None   # network file
-        self.DIFFUSION_FILE_DIR = None # diffusion file dir
-        self.NETWORK_CONSTRAINT_FILE_DIR = None # network constraint file
+        self.NETWORK_FILE_DIR = NETWORK_FILE_DIR   # network file
+        self.DIFFUSION_FILE_DIR = DIFFUSION_FILE_DIR # diffusion file dir
+        self.NETWORK_CONSTRAINT_FILE_DIR = NETWORK_CONSTRAINT_FILE_DIR # network constraint file
         self.PAGE_RANK_FILE_DIR = None # PR
         self.nodeList = None  # Node pointer vector. loaded from network.txt
         self.postList = None  # Post pointer vector. loaded from posts.txt
@@ -108,29 +108,29 @@ class DataLoader(object):
         self.sourceIdMap = {}; # KVP of source id(second attr in postList) and (1, 2, 3...)
                                      # what is a source id?
     
-    def LoadData():
+    def LoadData(self):
         pass
 
-    def LoadNetwork(filedir):
+    def LoadNetwork(self, filedir):
         pass
 
-    def LoadDiffusion(filedir):
+    def LoadDiffusion(self, filedir):
         pass
     
-    def LoadFeature(filedir): 
+    def LoadFeature(self, filedir): 
         pass
 
-    def GetUserId(key):
+    def GetUserId(self, key):
         pass
 
-    def GetPostId(key):
+    def GetPostId(self, key):
         pass
     
-    def GetOrInsertUserId(key):
+    def GetOrInsertUserId(self, key):
         pass
 
-    def GetOrInsertPostId(key):
+    def GetOrInsertPostId(self, key):
         pass
 
-    def GetOrInsertSourceId(key):
+    def GetOrInsertSourceId(self, key):
         pass

@@ -1,23 +1,24 @@
 class Test(object):
-    self.              model = None    # Model*
-    self.                diffusionSize = -1    # int*
-    self.               diffusionDuration = -1    # int*
+    def __init__(self):
+        self.model = None    # Model*
+        self.diffusionSize = -1    # int*
+        self.diffusionDuration = -1    # int*
 
-    def                 Simulation(  method):    # 
+    def Simulation(self, Method):    # int method
         pass
-    def                 SampleRole(  u):    # 
+    def SampleRole(self, u):    # int u 
         pass
-    def                 SampleT(  r):    # 
+    def SampleT(self, r):    # int r
         pass
-    def                 SampleT(user):   # arg: Node*
+    def SampleT(self, user):   # arg: Node*
         pass
-    def                 SampleZ(  r):   # 
+    def SampleZ(self, r):   # int r 
         pass
-    def                 SampleZ( user):   # Node*
+    def SampleZ(self, user):   # Node*
         pass
-    def                 TrueSize():    # 
+    def TrueSize(self, ):    # 
         pass
-    def                 TrueDuration():    # 
+    def TrueDuration(self, ):    # 
         pass
-    def                 SizeAndDuration(  method):    # 
+    def SizeAndDuration(self, method):    # int method
         pass
