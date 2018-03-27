@@ -11,7 +11,7 @@ class Test(object):
     def SampleT(self, r):    # int r
         pass
     def SampleT(self, user):   # arg: Node*
-        pass
+        pass  # overload?
     def SampleZ(self, r):   # int r 
         pass
     def SampleZ(self, user):   # Node*
