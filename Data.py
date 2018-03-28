@@ -126,7 +126,26 @@ class DataLoader(object):
         self.postIdMap = {}
         self.sourceIdMap = {}
         self.LoadNetwork(self.NETWORK_FILE_DIR)
+        self.LoadDiffusion(self.DIFFUSION_FILE_DIR)
+        self.LoadFeature(self.NETWORK_CONSTRAINT_FILE_DIR)
+
+        a = 0
+        b = 0
+
+        for i in range(len(self.nodeList)):
+            if len(self.nodeList[i].featureList) == 0 :
+                self.nodeList[i].featureList.append(1.0)
+                a = a + 1 
         
+        self.LoadFeature(self.PAGE_RANK_FILE_DIR)
+        for i in range(len(self.nodeList)):
+            if len(self.nodeList[i].featureList) < 2 :
+                self.nodeList[i].featureList.append(0)
+                b = b + 1 
+        
+        # printf("Missing %.5lf%% (%d / %d) PageRank.\n", (b + 0.0) * 100 / nodeList.size(), b, (int) nodeList.size());
+        # printf("Missing %.5lf%% (%d / %d) NetworkConstraint.\n", (a + 0.0) * 100 / nodeList.size(), a, (int) nodeList.size());
+        print("Dataset is ready!");
 
         
 
@@ -174,20 +193,92 @@ class DataLoader(object):
                 self.nodeList[j].outEdgeIdList.sort()
                 # print(j, " ", self.nodeList[j].outEdgeIdList)
             line = file.readline()
+
         # print(self.userIdMap)
         # print(len(self.userIdMap))
-        # self.userIdMap, nodeList测试通过
-        # print(self.nodeList[0].outEdgeList[0].name)
-        # for i in range(len(self.userIdMap)):
-        #     print(i, " ", self.nodeList[i].outEdgeList[0].name)
-        # print(self.nodeList[11].name)
+
         print("Load", count, "users in total")
         return 0
 
 
 
     def LoadDiffusion(self, filedir):
-        pass
+        print("########Loading Diffusion Data########")
+        file = open(filedir)
+        line = file.readline()
+        count = 0
+        notfound = 0
+        while line:
+            tokens = line.strip().split(" ")
+            # print(line)
+            if len(tokens) < 1:
+                continue
+            count = count + 1
+            if count % 100000 == 1:
+                print("Loading", count, "th line in Diffusion")
+
+            pid = len(self.postList)
+            t = eval(tokens[1])
+            uid = self.GetUserId(tokens[2])
+            if uid == -1:
+                nofound = nofound + 1
+                continue
+            
+            post = Post()
+            post.id = pid
+            post.name = tokens[0]
+            post.user = self.nodeList[uid]
+            post.postTime = t / TIME_STEP
+
+            sid = post.id
+
+            if len(tokens[3]) > 1 :
+                sid = self.GetPostId(tokens[3])
+            
+            if len(tokens[5]) > 1 && self.GetPostId(tokens[5]) == -1 :
+                continue
+            
+            if sid == -1:
+                continue
+            
+            post.sourceId = self.GetOrInsertSourceId(sid)
+
+            self.postIdMap[tokens[0]] = pid
+
+            self.postList.append(post)
+            post.sourcePost = postList[sid]
+            # 上面这句话没用？
+
+            nodeList[uid].postIdList[sid] = post.id
+
+            line = file.readline()
+        
+        for i in range(len(self.nodeList)):
+            self.nodeList[i].postIdList.sort()
+
+        for i in range(len(self.postList)):
+            post = self.postList[i]
+            post.influencedBy = []
+            user = post.user
+            if postList[i].sourcePost.id != postList[i].id:
+                for j in range( len(user.outEdgeList) ):
+                    source = user.outEdgeList[j]
+                    pid = source.GetPostIdBySource(post.sourcePost.id)
+                    sourcePostTime = -1
+                    if pid != -1:
+                        sourcePostTime = postList[pid].postTime
+                    if pid == -1:
+                        continue
+                    if sourcePostTime <= post.postTime:
+                        post.influencedBy.append(self.postList[pid])
+            self.postList[i].inactiveNeighbors = 0
+            for j in range(len(user.inEdgeList)):
+                target = user.inEdgeList[j]
+                p = target.GetPostIdBySource(post.sourcePost.id)
+                if p == -1:
+                    postList[i].inactiveNeighbors += 1
+                
+        
     
     def LoadFeature(self, filedir): 
         pass
@@ -206,7 +297,6 @@ class DataLoader(object):
         self.nodeList.append(thisNode)
         self.userIdMap[key] = len(self.userIdMap) # 从0开始
         return thisNode.id
-        
 
     def GetOrInsertPostId(self, key):
         pass
