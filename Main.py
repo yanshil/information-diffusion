@@ -18,7 +18,7 @@ BETA_1 = 1
 GAMMA_0 = 1
 GAMMA_1 = 1
 
-NETWORK_FILE_DIR = ""
+NETWORK_FILE_DIR = "./sample_data/TestNetwork.txt"
 DIFFUSION_FILE_DIR = ""
 NETWORK_CONSTRAINT_FILE_DIR = ""
 PAGE_RANK_FILE_DIR = ""
@@ -27,7 +27,7 @@ MODEL_FILE_DIR = "model.txt"
 
 # ------------2. Load Data ----------------#
 
-dataLoader = DataLoader() # 暂时没有参数
+dataLoader = DataLoader(NETWORK_FILE_DIR) # 暂时没有参数
 dataLoader.TIME_STEP = TIME_STEP
 dataLoader.NETWORK_FILE_DIR = NETWORK_FILE_DIR
 dataLoader.DIFFUSION_FILE_DIR = DIFFUSION_FILE_DIR
