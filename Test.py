@@ -6,83 +6,111 @@ import numpy as np
 
 
 class Test(object):
+    """
+
+    Attributes:
+        model (Model):
+        diffusionSize (List[int]):
+        diffusionDuration (List[int]):
+
+    """
     def __init__(self):
-        self.model = None    # type: Model
-        self.diffusionSize = None    # type: List[int]
-        self.diffusionDuration = None    # type: List[int]
-
-    def Simulation(self, method):
-        """
-
-        :param int method:
-        :rtype: int
-        :return:
-        """
-
-        pass
+        self.model = None
+        self.diffusionSize = None
+        self.diffusionDuration = None
 
     def SampleRole(self, u):
-        """
+        """Sample the role of user **u** *w.r.t.* his theta
 
-        :param int u:
-        :rtype: int
-        :return:
+        Args:
+            u (int): index of user whose role is to be sampled
+
+        Returns:
+            role (int): role of user **u**
+
         """
         rolenum = self.model.roleNum
-        p = np.ndarray([rolenum])
-        p[0] = self.model.theta[u][0]
-        for r in range(1, rolenum):
-            p[r] = p[r-1] + self.model.theta[u][r]
+        p = np.array(self.model.theta[u][0:rolenum])
         role = np.random.choice(rolenum, size=1, p=p/np.sum(p))
         return role
 
     def SampleT(self, r):
-        """
+        """Sample diffusion delay **T** *w.r.t.* role or user
 
-        :param int | Node r:
-        :rtype: int
-        :return: None
+        Args:
+            r (int|Node): role if int, user if node
+
+        Returns:
+            t (int): diffusion delay
+
         """
+        t = None
         if isinstance(r, Node):
             pass
         elif isinstance(r, int):
-            t = np.random.geometric(p=self.model)
-        pass
+            t = np.random.geometric(p=self.model.Lambda[r])
+        return t
 
     def SampleZ(self, r):
         """
 
-        :param int | Node r:
-        :rtype: int
-        :return: None
+        Args:
+            r (int|Node): role if int, user if node
+
+        Returns:
+            z (int): 1 if successful, 0 if failed
+
         """
+        z = None
         if isinstance(r, Node):
             pass
         elif isinstance(r, int):
-            pass
+            if np.random.random_sample(1) > self.model.rho[r]:
+                z = 0
+            else:
+                z = 1
+        return z
+
+
+    def Simulation(self, method):
+        """
+
+        Args:
+            method (int):
+
+        Returns:
+            (int):
+
+        """
+
         pass
 
     def TrueSize(self, ):
         """
 
-        :rtype: int
-        :return:
+        Returns:
+            (int):
+
         """
         pass
 
     def TrueDuration(self, ):
         """
 
-        :rtype: int
-        :return:
+        Returns:
+            (int):
+
         """
         pass
 
     def SizeAndDuration(self, method):
         """
 
-        :param int method:
-        :rtype: int
-        :return:
+        Args:
+            method (int):
+
+        Returns:
+            (int):
+
         """
         pass
