@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #Date:2018.4.3
-from Data  import NodeAttr, Node, PostAttr, Post, DataLoader
+from Data import NodeAttr, Node, PostAttr, Post, DataLoader
 import sys
 import math
 from string import atof
