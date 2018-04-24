@@ -11,7 +11,7 @@ class NodeAttr(object):
         feature: a double list indicating features
         postIdList : KVP <pair<int, int>> , source id and post id pair(by this user)
         '''
-        self.id = -1    
+        self.id = -1
         self.name = None
         self.inEdgeIdList = []
         self.outEdgeIdList = []
@@ -19,6 +19,7 @@ class NodeAttr(object):
         self.outEdgeList = None
         self.featureList = None
         self.postIdList = {}
+
 
 # DataLoader里面存储的是这个链表
 class Node(object):
@@ -55,8 +56,8 @@ class Node(object):
             while node.next:
                 node = node.next
             node.next = item
-            self.length += 1 
-       
+            self.length += 1
+
 
 class PostAttr(object):
     def __init__(self):
@@ -77,14 +78,15 @@ class PostAttr(object):
         self.sourceId = -1
         self.name = None
         self.sourcePost = None
-        self.influencedBy = None # 注意这个是干嘛的
+        self.influencedBy = None  # 注意这个是干嘛的
 
 
 class Post(object):
     '''
         the chain table only need one function : append
     '''
-    def __init__(self, pHead = None, pNext = None):
+
+    def __init__(self, pHead=None, pNext=None):
         self.head = pHead
         self.length = 0
         self.next = pNext
@@ -104,10 +106,12 @@ class Post(object):
             while node.next:
                 node = node.next
             node.next = item
-            self.length += 1 
+            self.length += 1
+
 
 class DataLoader(object):
-    def __init__(self, NETWORK_FILE_DIR = None, DIFFUSION_FILE_DIR = None, NETWORK_CONSTRAINT_FILE_DIR = None, PAGE_RANK_FILE_DIR = None ):
+    def __init__(self, NETWORK_FILE_DIR=None, DIFFUSION_FILE_DIR=None, NETWORK_CONSTRAINT_FILE_DIR=None,
+                 PAGE_RANK_FILE_DIR=None):
         self.TIME_STEP = -1
         self.NETWORK_FILE_DIR = NETWORK_FILE_DIR   # network file
         self.DIFFUSION_FILE_DIR = DIFFUSION_FILE_DIR # diffusion file dir
@@ -288,7 +292,7 @@ class DataLoader(object):
 
     def GetPostId(self, key):
         pass
-    
+
     def GetOrInsertUserId(self, key):
         if len(self.userIdMap) > 0 :
             if  self.userIdMap.__contains__(key):

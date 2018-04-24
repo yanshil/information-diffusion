@@ -854,4 +854,4 @@ class model(object):
             allC += C[r]
         for r in range(0,self.roleNum):
             print('%.5lf'%((C[0] + 0.0) / allC))
-      
+    
