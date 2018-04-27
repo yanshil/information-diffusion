@@ -1,5 +1,5 @@
 from Data import Node
-from Model import Model
+from Model import model
 
 from typing import List
 import numpy as np

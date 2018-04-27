@@ -1,5 +1,5 @@
 from Data       import NodeAttr, Node, PostAttr, Post, DataLoader
-from Model      import Model
+from Model      import model
 from Test       import Test
 from Analyzer   import Analyzer
 from Util       import Util
@@ -19,9 +19,9 @@ GAMMA_0 = 1
 GAMMA_1 = 1
 
 NETWORK_FILE_DIR = "./sample_data/TestNetwork.txt"
-DIFFUSION_FILE_DIR = ""
-NETWORK_CONSTRAINT_FILE_DIR = ""
-PAGE_RANK_FILE_DIR = ""
+DIFFUSION_FILE_DIR = "./sample_data/TestPost.txt"
+NETWORK_CONSTRAINT_FILE_DIR = "./sample_data/TestNc.txt"
+PAGE_RANK_FILE_DIR = "./sample_data/TestPr.txt"
 MODEL_FILE_DIR = "model.txt"
 # 这玩意可以写成参数形式
 
@@ -35,7 +35,7 @@ dataLoader.NETWORK_CONSTRAINT_FILE_DIR = NETWORK_CONSTRAINT_FILE_DIR
 dataLoader.PAGE_RANK_FILE_DIR = PAGE_RANK_FILE_DIR
 dataLoader.LoadData()
 
-model = Model()
+model = model()
 
 model.LoadData(dataLoader)
 model.alpha   = ALPHA

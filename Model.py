@@ -3,7 +3,7 @@
 from Data  import NodeAttr, Node, PostAttr, Post, DataLoader
 import sys
 import math
-from string import atof
+# from string import atof
 import numpy
 import random
 
@@ -12,6 +12,8 @@ EE=2.718281828459
 MAXINT=10000000
 
 def GammaFunction(x):
+    if (x <= 0) | (x + 1 / (12.0 * x - 1.0 / (10 * x)) <= 0) :
+        return 1
     res = 0.5 * (math.log(2 * PI) - math.log(x)) + x * (math.log(x + 1 / (12.0 * x - 1.0 / (10 * x))) - 1)
     return res
     #return math.pow(EE, res)
@@ -36,7 +38,7 @@ class model(object):
         self.beta_1 = 0
         self.gamma_0 = 0   # hyper-parameter of rho  fail
         self.gamma_1 = 0   # hyper-parameter of rho
-        self.rho = None    # 1d pointer. role-active prob (Bionomial)
+        self.rho = []    # 1d pointer. role-active prob (Bionomial)
         self.Lambda = None # 1d pointer. role-delay prob (geometric)
         self.theta = None  # 2d pointer. user-role prob (Multinomial)
         self.mu = None     # 2d pointer.role-feature mean in Gaussian
@@ -48,9 +50,9 @@ class model(object):
         self.nr = None     # 1d
         self.nu = None     # 1d
         self.nrz  = None   # 2d pointer.
-        self.sumz_v = None
-        self.sumt_v = None # 2d pointer.
-        self.sumt_r = None # 1d
+        self.sumz_v = []
+        self.sumt_v = [] # 2d pointer.
+        self.sumt_r = [] # 1d
         self.E = None      # 2d pointer.
         self.nz_t = None   # 2d pointer.
         self.sumz_m = None
@@ -65,25 +67,27 @@ class model(object):
         self.dataLoader = None  # DataLoader * 
 
     def  Init(self):
-        self.rho = [0.0]*self.roleNum
-        self.Lambda = [0.0]* self.roleNum
-        self.mu = [[0.0]]* self.roleNum
-        self.delta = [[0.0]]* self.roleNum
-        self.theta = [[0.0]]* self.V
-        self.R = [[0]]* self.M 
-        self.T = [[0]]* self.M 
-        self.Z = [[0]]* self.M
-        self.nur = [[0]]* self.V
+        self.rho = [0.0] * self.roleNum
+        self.Lambda = [0.0] * self.roleNum
+        self.mu = [[0 for i in range(self.K)] for i in range(self.roleNum)]
+        self.delta = [[0 for i in range(self.K)] for i in range(self.roleNum)]
+        self.theta = [[0 for i in range(self.roleNum)] for i in range(self.V)]
+        self.R = [[]]* self.M 
+        self.T = [[]]* self.M 
+        self.Z = [[]]* self.M
+
+
+        self.nur = [[0 for i in range(self.roleNum)] for i in range(self.V)]
         self.nr = [0]* self.roleNum
         self.nu = [0]* self.V
-        self.sumz_v = [[0]]* self.S
-        self.sumt_v = [[0]]* self.S
-        self.E = [[0]]* self.V
-        self.nz_t = [[0]]* self.roleNum
+        self.sumz_v = [[0 for i in range(self.V)] for i in range(self.S)]
+        self.sumt_v = [[0 for i in range(self.V)] for i in range(self.S)]
+        self.E = [[0 for i in range(self.K)] for i in range(self.V)]
+        self.nz_t = [[0 for i in range(self.K)] for i in range(self.roleNum)]
         self.nrz = [[0]]* self.roleNum
         self.t_r= [0]* self.roleNum
-        self.sumz_m = [[0.0]]* self.roleNum
-        self.sumz_s = [[0.0]]* self.roleNum
+        self.sumz_m = [[0 for i in range(self.K)] for i in range(self.roleNum)]
+        self.sumz_s = [[0 for i in range(self.K)] for i in range(self.roleNum)]
         self.instanceNum =  self.V * self.K
         self.tau1 =  self.instanceNum
         self.tau2 = ( self.instanceNum + 0.0) / 2.0
@@ -95,40 +99,41 @@ class model(object):
         for v in range(0,self.V):
             for t in range (0,self.K):
                  self.tau0 +=  self.nodeList[v].featureList[t]
-        self.tau0 /= instanceNum
+        self.tau0 /= self.instanceNum
 
         for v in range(0,self.V):
             for t in range (0,self.K):
                 self.tau3 += math.pow(( self.nodeList[v].featureList[t] -  self.tau0), 2)
         self.tau3 /= 2
 
-        for v in range (0,V):
-            self.nu.append(0)
-            self.theta.append([0.0]*self.roleNum)
-            self.nur[v].append([0.0]*self.roleNum)
-            self.E[v].append([0]*self.K)
+        for v in range (0,self.V):
+            pass
+            # self.nu.append(0)
+            # self.theta.append([0.0]*self.roleNum)
+            # self.E[v].append([0]*self.K)
             # for r in range(0,self.roleNum):
             #     self.theta[v][r] = 0.0
             #     self.nur[v][r] = 0
 
         for r in range(0,self.roleNum):
-            self.mu[r].append([0.0]*self.K)
-            self.delta[r].append([0.0]*self.K)
-            self.nz_t[r].append([0]*self.K)
+            # self.mu[r].append([0.0]*self.K)
+            # self.delta[r].append([0.0]*self.K)
+            # self.nz_t[r].append([0]*self.K)
             self.nrz[r].append([0]*2)
-            self.sumz_m[r].append([0.0]*self.K)
-            self.sumz_s[r].append([0.0]*self.K)
+            # self.sumz_m[r].append([0.0]*self.K)
+            # self.sumz_s[r].append([0.0]*self.K)
             self.nrz[r].insert(0,0)
             self.nrz[r].insert(1,0) 
-            self.sumt_r[r] = 0
+            self.sumt_r.append(0)
             self.nr[r] = 0.0
             
         for i in range(0,len(self.postList)):
-            Node.user = self.postList[i].user
+            user = self.postList[i].user
             l = len(user.inEdgeList)
-            self.R.append([0]*l)
-            self.T.append([0]*l)
-            self.Z.append([0]*l)
+            for j in range(l):
+                self.R[i].append(0)
+                self.T[i].append(0)
+                self.Z[i].append(0)
 
         for s in range (0,self.S):
             self.sumz_v[s].append([0]*self.V)
@@ -139,86 +144,83 @@ class model(object):
             
         for i in range(0,len(self.postList)):
      
-            Post.post = self.postList[i]
-            Node.source = post.user
+            post = self.postList[i]
+            source = post.user
             u = source.id
             sid = post.sourceId
             tiu = post.postTime
             for j in range(0,len(source.inEdgeList)):
-                Node.target = source.inEdgeList[j]
+                target = source.inEdgeList[j]
                 pid = target.GetPostIdBySource(post.sourcePost.id)
                 tiv = MAXINT
                 if (pid != -1):
-                    tiv = postList[pid].postTime
-                if (pid != -1 & tiv < tiu):
+                    tiv = self.postList[pid].postTime
+                if ((pid != -1) & (tiv < tiu)):
                     continue
                 v = target.id
                
                 y = 1
                 if (pid == -1):
                     y = 0
-                r = (numpy.random.rand() * self.roleNum)
+                r = math.floor(numpy.random.rand() * self.roleNum)
                 if (r == self.roleNum):
                     r -= 1
                 t = (numpy.random.rand() * self.maxTime)
                 if (t == self.maxTime):
                     t -= 1,
-                z = (numpy.random.rand() * 2)
-                if (z == 2):
-                    z -= 1
+                z = math.floor(numpy.random.rand() * 2)
+                
                 if (y == 1 & self.sumt_v[sid][v] == 0):
                     t = tiv - tiu
                 
                 if (y == 1 & self.sumz_v[sid][v] == 0):
-                    z = 1
-                #if (i == 0 & j < 2):
-                #   print('%d %d %d %d\n', tiv, tiu, t, r)
-                #   update
-                
+                    z = 1     
                 tv = 0
                 if (t + tiu == tiv):
                     tv = 1
-                if (t >= self.self.maxTime):
+                if (t >= self.maxTime):
                     t = self.maxTime - 1
                 self.R[i][j] = r
                 self.T[i][j] = t
                 self.Z[i][j] = z
-                self.nur[u][r] += 1
+                self.nur[u][r] = self.nur[u][r] + 1
                 self.nu[u] += 1
                 self.nr[r] += 1
-                self.nrz[r][z] += 1
+                self.nrz[r][z] = self.nrz[r][z] + 1
                 self.sumt_r[r] += t
                 self.sumz_v[sid][v] += z
                 self.sumt_v[sid][v] += tv
             
         
-        for v in range(0,V):
-            Node.user = nodeList[v]
-            for t in range(0, K):
+        for v in range(0,self.V):
+            user = self.nodeList[v]
+            for t in range(0, self.K):
                 x = user.featureList[t]
-                r = (numpy.random.rand() * roleNum)
-                if (r == roleNum):
+                r = math.floor(numpy.random.rand() * self.roleNum)
+                if (r == self.roleNum):
                     r -= 1
                 self.E[v][t] = r
-                self.nur[v][r] += 1
+                self.nur[v][r] = self.nur[v][r]+1
                 self.nu[v] += 1
-                self.nz_t[r][t] += 1
+                self.nz_t[r][t] = self.nz_t[r][t] + 1
                 self.sumz_m[r][t] += x
             
         
         for r in range(0,self.roleNum):
             for t in range(0,self.K): 
+                if self.nz_t[r][t] == 0:
+                    self.nz_t[r][t] += 1e-10
                 self.sumz_m[r][t] /= self.nz_t[r][t]
             
-        for v in range(0,V):
-            for t in range(0,K):
+        for v in range(0, self.V):
+            for t in range(0, self.K):
                 r = self.E[v][t]
                 x = self.nodeList[v].featureList[t]
                 self.sumz_s[r][t] += math.pow((x - self.sumz_m[r][t]), 2)
             
         
-        for r in range (0,roleNum):
-            for t in range(0,K):
+        for r in range (0, self.roleNum):
+            for t in range(0, self.K):
                 self.sumz_s[r][t] /= self.nz_t[r][t]
 
     def  SampleRTZ(self,u,v,y,tiu,tiv,sumtv,sumzv):
@@ -277,7 +279,7 @@ class model(object):
             p[k] += p[k - 1]
 
         # scaled sample because of unnormalized p[]
-        s = (random.random()) * p[2 * roleNum * maxTime - 1]
+        s = (random.random()) * p[2 * self.roleNum * self.maxTime - 1]
 
         sample = 2 * self.roleNum * self.maxTime - 1
         for sample in range(0,2 * self.roleNum * self.maxTime - 1):
@@ -290,20 +292,20 @@ class model(object):
     def  SampleDiffusion(self):     	    
         for i in range(0,len(self.postList)):
         
-            Post.post = self.postList[i]
-            Node.source = post.user
+            post = self.postList[i]
+            source = post.user
             u = source.id
             sid = post.sourceId
             tiu = post.postTime
             for j in range(0,len(source.inEdgeList)):
                 #print('%d ', j)
-                Node.target = source.inEdgeList[j]
+                target = source.inEdgeList[j]
                 #print('%d', target.id)
                 pid = target.GetPostIdBySource(post.sourcePost.id)
                 tiv = MAXINT
                 if (pid != -1):
-                    tiv = postList[pid].postTime
-                if (pid != -1 & tiv < tiu):
+                    tiv = self.postList[pid].postTime
+                if ((pid != -1) & (tiv < tiu)):
                     continue
                 #if (pid != -1 & tiv - tiu - 1 >= maxTime)
                 #    print('Time Exceeds!\n')
@@ -313,7 +315,7 @@ class model(object):
                 old_z = self.Z[i][j]
                 old_tv = 0
                 #print('old sample: %d %d %d', old_r, old_t, old_z)
-                if (old_t + tiu == tiv | (tiv - tiu >= self.maxTime & old_t ==self. maxTime - 1)):
+                if ((old_t + tiu == tiv) | ((tiv - tiu >= self.maxTime) & (old_t ==self.maxTime - 1)) ):
                     old_tv = 1
                 self.nur[ u ][ old_r ] -=1
                 self.nr[ old_r ] -= 1
@@ -328,14 +330,14 @@ class model(object):
                 y = 1
                 if (pid == -1):
                     y = 0
-                sample = SampleRTZ(u, v, y, tiu, tiv, self.sumt_v[sid][v], self.sumz_v[sid][v])
-                r = sample / (self.maxTime * 2)
+                sample = self.SampleRTZ(u, v, y, tiu, tiv, self.sumt_v[sid][v], self.sumz_v[sid][v])
+                r = math.floor(sample / (self.maxTime * 2))
                 t = (sample % (self.maxTime * 2)) / 2
                 z = sample % 2
                 #print('%d %d %d', r, t, z)
                 # update
                 tv = 0
-                if (t + tiu == tiv | (tiv - tiu >= self.maxTime & t == self.maxTime - 1)):
+                if ((t + tiu == tiv) | ((tiv - tiu >= self.maxTime) & (t == self.maxTime - 1))):
                     tv = 1
                 self.R[i][j] = r
                 self.T[i][j] = t
@@ -350,8 +352,8 @@ class model(object):
             
     def  SampleFeature(self):
  	    
-        for i in roleNum(0,len(self.nodeList)):
-            Node.user = self.nodeList[i]
+        for i in range(len(self.nodeList)):
+            user = self.nodeList[i]
             u = user.id
             for t in range(0,self.K):
             
@@ -360,10 +362,14 @@ class model(object):
                 self.nur[u][old_e]-=1
                 self.nu[u] -= 1
                 self.sumz_s[old_e][t] = self.sumz_s[old_e][t] * self.nz_t[old_e][t] - x * x + self.nz_t[old_e][t] * self.sumz_m[old_e][t] * self.sumz_m[old_e][t]
+                if self.nz_t[old_e][t] - 1 == 0:
+                    self.nz_t[old_e][t] += 1e-10
                 self.sumz_m[old_e][t] = (self.sumz_m[old_e][t] * self.nz_t[old_e][t] - x + 0.0) / (self.nz_t[old_e][t] - 1)
                 self.nz_t[old_e][t] -=self.nz_t[old_e][t]
+                if self.nz_t[old_e][t] == 0:
+                    self.nz_t[old_e][t] += 1e-10
                 self.sumz_s[old_e][t] = (self.sumz_s[old_e][t] - self.nz_t[old_e][t] * self.sumz_m[old_e][t] * self.sumz_m[old_e][t]) / (self.nz_t[old_e][t])
-                e = SampleRole(u, x, t)
+                e = self.SampleRole(u, x, t)
 
                 #print('%d %d %d', i, t, e)
                 self.E[u][t] = e
@@ -419,18 +425,17 @@ class model(object):
     def  LoadData(self,dataLoader):
         self.postList = dataLoader.postList
         self.nodeList = dataLoader.nodeList
-        self.V = len(nodeList)  #the number of users
-        self.M = len(postList) #the number of post
+        self.V = len(self.nodeList)  #the number of users
+        self.M = len(self.postList) #the number of post
         self.S = len(dataLoader.sourceIdMap) #the number of source post
         self.K = len(Node(dataLoader.nodeList[0]).featureList) #pagerank & network constraint
-        print('#source posts: %d, #users: %d, #posts: %d\n', S, V, M)   
+        print('#source posts: %d, #users: %d, #posts: %d\n', self.S, self.V, self.M)   
 
     def  GibbsSampling( self,maxIter,   BURN_IN,   SAMPLE_LAG):
      	    
         print('####################')
         print('Start Learning!')
-        srand(745623)
-        Init()
+        self.Init()
         sample_cnt = 0
         self.sum_Lambda = []
         self.sum_rho = []
@@ -449,12 +454,12 @@ class model(object):
         
         for iter in range(1,maxIter+1):
             print('[Iteration %d]...'%iter)
-            s1 = SampleDiffusion()
+            s1 = self.SampleDiffusion()
             if (s1 == -1):
                 print('Error when sampling diffusion process!')
                 return -1
             
-            SampleFeature()
+            self.SampleFeature()
             if (iter < BURN_IN):
                 continue
             if ((iter - BURN_IN) % SAMPLE_LAG != 0):
@@ -487,9 +492,9 @@ class model(object):
                     self.delta[r][t] = (2 * self.tau2 + self.nz_t[r][t]) / (2 * self.tau3 + self.nz_t[r][t] * self.sumz_s[r][t] + (self.tau1 * self.nz_t[r][t] * math.pow(self.sumz_m[r][t] - self.tau0, 2)) / (self.tau1 +self.nz_t[r][t]))  #algorithm 5
                 
             
-            PrintRho()
-            PrintNr()
-            PrintMu()
+            self.PrintRho()
+            self.PrintNr()
+            self.PrintMu()
             for r in range(0, self.roleNum):
                 self.sum_Lambda[r] += 1
                 self.sum_rho[r] += 1
@@ -513,8 +518,8 @@ class model(object):
                 self.delta[r][t] = math.sqrt(1.0 / self.delta[r][t])
         
         print('########## Final Parameters ##########')
-        PrintRho()
-        PrintMu()
+        self.PrintRho()
+        self.PrintMu()
         
     def  PrintMu(self):
  	    
@@ -551,14 +556,14 @@ class model(object):
             for r in range(0, self.roleNum):
                 print(fout, '%.5lf '%self.theta[v][r])
             print(fout)
-        
+
         fout.close()
 
     def  Save(self,fileDir):
  	    
-        SaveTheta()
-        SaveRho()
-        SaveGaussian()
+        self.SaveTheta()
+        self.SaveRho()
+        self.SaveGaussian()
         fout = open(fileDir, 'w')
         for r in range(0, self.roleNum):
             print(fout, '%.10lf '%self.rho[r])
@@ -580,7 +585,7 @@ class model(object):
         
         for v in range(0,self.V):
         
-            for r in range(0, roleNum):
+            for r in range(0, self.roleNum):
                 print(fout, '%.10lf '%self.theta[v][r])
             print(fout)
         
@@ -632,62 +637,69 @@ class model(object):
         truth =set()
         pair={}
         #vector<pair<int, float> >* res = new vector<pair<int, float> >[S]
-        res=[]
+        res = [{} for i in range(self.S)]
         for s in range(0,self.S):
             truth.clear()
             for v in range(0, self.V):
-                res.append(pair={"first":"v","second":1.0})
+                res[s][v]=1.0
 
         for i in range(0,len(self.postList)):
-            Post.post = self.postList[i]
+            post = self.postList[i]
             sid = post.sourceId
             u = post.user.id
-            Node.user = post.user
+            user = post.user
             if (post.sourcePost.id != post.id):
                 truth[sid].append(user.id)
 
             for j in range(0,len(user.inEdgeList)): 
-                Node.target = user.inEdgeList[j]
+                target = user.inEdgeList[j]
                 v = user.inEdgeList[j].id
                 pid = target.GetPostIdBySource(post.sourcePost.id)
                 tiv = MAXINT
                 if (pid != -1):
-                    tiv = postList[pid].postTime
-                if (pid != -1 & tiv < post.postTime):
+                    tiv = self.postList[pid].postTime
+                if ((pid != -1) & (tiv < post.postTime)):
                     continue
                 prob = 0.0
                 maxProb = 0.0
                 maxR=0
                 for r in range(0, self.roleNum):
+                    self.rho
+                    self.Lambda[r]
+                    self.theta[u][r]
                     prob += (self.rho[r] * math.pow(1 - self.Lambda[r], self.maxTime - 1) + (1 - self.rho[r])) * self.theta[u][r]
                     if (self.theta[u][r] > maxProb):
-                        maxProb = theta[u][r]
+                        maxProb = self.theta[u][r]
                         maxR = r
                 #unactive users
                 prob = self.rho[maxR] * math.pow(1 - self.Lambda[maxR], self.maxTime - 1) + (1 + self.rho[maxR])
-                res[sid][v].second *= prob
+                print('sid', sid, 'v', v)
+                print(res)
+                print('fuck', res[sid][v], sid)
+                res[sid][v] *= prob
             
         
         posCnt = 0
         allCnt = 0
+        testCnt = 0
         for s in range(0,self.S):
             posCnt += len(truth)
             allCnt += len(res)
-        print('Average Postive Instance: %.5lf\n', (posCnt + 0.0) / (S + 0.0))
+        print('Average Postive Instance: %.5lf\n', (posCnt + 0.0) / (self.S + 0.0))
         print('Postive : Negative Instance: %.5lf\n', (posCnt + 0.0) / (allCnt - posCnt))
         Map = 0.0
         mrr = 0.0
         estCnt = 0
         P = []
         for  i in range(0,100):
-            P[i] = 0.0
-        print('#query : %d\n', S)
+            P.append(0.0)
+        print('#query : %d\n', self.S)
         
         res.sort(SecondCmp)
             # sort(res[s].begin(), res[s].end(), SecondCmp)
             #if (s == 0)
             #    print('%.10lf %.10lf\n', res[s][0].second, res[s][1].second)
-        for s in range(0,S):  
+        for s in range(0,self.S):
             ap = 0.0
             ar = 0.0
             hitCnt = 0
@@ -719,9 +731,9 @@ class model(object):
         for i in range(0,100):
             P[i] += P[i - 1]
         for i in range(0,100):
-            P[i] /= ((i + 1.0) * S)
-        Map /= S
-        mrr /= S
+            P[i] /= ((i + 1.0) * self.S)
+        Map /= self.S
+        mrr /= self.S
         print('#Test cases: %d\n', testCnt)
         print('P@1: %.5lf\n', P[0])
         print('P@3: %.5lf\n', P[2])
@@ -739,45 +751,45 @@ class model(object):
         truth =set()
         pair={}
         res=[]
-        for r in range(0,roleNum):
+        for r in range(0, self.roleNum):
             truth.clear()
-            for v in range(0, V):
-                for s in range(0,S):
+            for v in range(0, self.V):
+                for s in range(0,self.S):
                     res[r].insert(s+1,pair={"first":"v","second":1.0})
                     #res[r][s].push_back(make_pair(v, 1.0))
         
-        for i in range(0,len(postList)):
+        for i in range(0,len(self.postList)):
         
-            Post.post = self.postList[i]
+            post = self.postList[i]
             sid = post.sourceId
             u = post.user.id
-            Node.user = post.user
+            user = post.user
             if (post.sourcePost.id != post.id):
                 truth[sid].append(user.id)
             for j in range(0,len(user.inEdgeList)):
-                Node.target = user.inEdgeList[j]
+                target = user.inEdgeList[j]
                 v = user.inEdgeList[j].id
                 pid = target.GetPostIdBySource(post.sourcePost.id)
                 tiv = MAXINT
                 if (pid != -1):
-                    tiv = postList[pid].postTime
+                    tiv = self.postList[pid].postTime
                 if (pid != -1 & tiv < post.postTime):
                     continue
                 prob = 0.0
                 role = 0
                 for r in range(0,self.roleNum):
-                    prob += (rho[r] * math.pow(1 - Lambda[r], maxTime - 1) + (1 - rho[r])) * theta[u][r]#inactive user
+                    prob += (self.rho[r] * math.pow(1 - self.Lambda[r], self.maxTime - 1) + (1 - self.rho[r])) * self.theta[u][r]#inactive user
                     if (self.theta[v][r] > self.theta[v][role]):
                         role = r
                 res[role][sid][v].second *= prob    
         posCnt = 0
         allCnt = 0
-        for s in range(0,S):
+        for s in range(0, self.S):
         
             posCnt += truth[s].size()
             allCnt += res[0][s].size()
         
-        print('Average Postive Instance:'+'%.5f'%(posCnt + 0.0) / (S + 0.0))
+        print('Average Postive Instance:'+'%.5f'%(posCnt + 0.0) / (self.S + 0.0))
         print('Postive : Negative Instance:'+'%.5f'%(posCnt + 0.0) / (allCnt - posCnt))
        
         C = []
@@ -790,13 +802,13 @@ class model(object):
             P = []
             for i in range(0,100):
                 P.append(0.0)
-            for s in range(0,S):
+            for s in range(0, self.S):
                 truth.clear()
-            for i in range(0,len(self.postList)):
-                Post.post= list()
+            for i in range(0, len(self.postList)):
+                post= list()
                 sid = post.sourceId
                 u = post.user.id
-                Node.user = post.user
+                user = post.user
                 role = 0
                 for rr in range(0,self.roleNum):
                     if (self.theta[u][rr] > self.theta[u][role]):
@@ -804,7 +816,7 @@ class model(object):
                 if (post.sourcePost.id != post.id & role == r):
                     truth[sid].append(u)
             
-            for s in range(0,S): 
+            for s in range(0, self.S):
             
                 C[r] += len(self.res[r][s])
                 res.sort(SecondCmp)
@@ -836,9 +848,9 @@ class model(object):
             for i in range(0,100):
                 P[i] += P[i - 1]
             for i in range(0,100):
-                P[i] /= ((i + 1.0) * S)
-            Map /= S
-            mrr /= S
+                P[i] /= ((i + 1.0) * self.S)
+            Map /= self.S
+            mrr /= self.S
             print('P@1:'+'%.5lf'%P[0])
             print('P@3:'+'%.5lf'%P[2])
             print('P@5:'+'%.5lf'%P[4])
