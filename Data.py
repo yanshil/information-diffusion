@@ -1,5 +1,6 @@
 import sys
 import math
+import datetime
 
 class NodeAttr(object):
     def __init__(self):
@@ -27,20 +28,18 @@ class Node(object):
     '''
         the chain table only need one function : append
     '''
-    def __init__(self,id = None, name = None, inEdgeIdList = None, 
-        outEdgeIdList = None, inEdgeList = [], outEdgeList = [], 
-        featureList = [], postIdList = [],  pHead = None, pNext = None):
+    def __init__(self,id = None, name = None):
         self.id = id  
         self.name = name
-        self.inEdgeIdList = inEdgeIdList
-        self.outEdgeIdList = outEdgeIdList
-        self.inEdgeList = inEdgeList
-        self.outEdgeList = outEdgeList
-        self.featureList = featureList
-        self.postIdList = postIdList
-        self.head = pHead
+        self.inEdgeIdList = []
+        self.outEdgeIdList = []
+        self.inEdgeList = []
+        self.outEdgeList = []
+        self.featureList = []
+        self.postIdList = []
+        self.head = None
         self.length = 0
-        self.next = pNext
+        self.next = None
 
     def Append(self, thisNode):
         item = thisNode
@@ -74,8 +73,11 @@ class Node(object):
             else:
                 r = mid - 1
         
-        while (pos > 0 & self.postIdList[pos - 1][0] == sourcePostId):
-            pos = pos - 1
+        while len(self.postIdList) > 0 & pos > 0  == sourcePostId:
+            if self.postIdList[pos - 1][0] == sourcePostId :
+                pos = pos - 1
+            else:
+                break
         return pos
 
 
@@ -177,7 +179,7 @@ class DataLoader(object):
         
         # printf("Missing %.5lf%% (%d / %d) PageRank.\n", (b + 0.0) * 100 / nodeList.size(), b, (int) nodeList.size());
         # printf("Missing %.5lf%% (%d / %d) NetworkConstraint.\n", (a + 0.0) * 100 / nodeList.size(), a, (int) nodeList.size());
-        print("Dataset is ready!");
+        print("Dataset is ready!")
 
         
 
@@ -187,16 +189,29 @@ class DataLoader(object):
         file = open(filedir)
         line = file.readline()
         count = 0
+        '''
+        while line:
+            count = count + 1
+            if count % 100 == 0:
+                print(count)
+            line = file.readline()
+        '''
+
         while line:
             tokens = line.strip().split(" ")
             # print(line)
             if len(tokens) < 1:
                 continue
             count = count + 1
-            if count % 100000 == 1:
+            if count % 100000 == 0:
+                break
                 print("Loading", count, "th line")
-            
+            starttime = datetime.datetime.now()
             source = self.GetOrInsertUserId(tokens[0])
+            if source == 1 :
+                a = 1
+                b = 1
+
             '''
                 # usw map in STL to find whether the use has been processed
                 # if does, return its ID. if not, make a KVP and return a new id,
@@ -214,21 +229,20 @@ class DataLoader(object):
                 self.nodeList[target].inEdgeList.append(self.nodeList[source])
                 # print(self.nodeList[source].name, " ", self.nodeList[source].outEdgeList[len(self.nodeList[source].outEdgeList) - 1].name)
             # 这里得到的是所有入/出关系
-
-            # 这里显然可以改进！！！！！！！！！！！！！！！！
-            temp = len(self.nodeList)
-            for j in range(temp):
-                thisNode = self.nodeList[j]
-                self.nodeList[j].outEdgeIdList = []
-                for k in range(len(thisNode.outEdgeList)):
-                    self.nodeList[j].outEdgeIdList.append(thisNode.outEdgeList[k].id)
-                self.nodeList[j].outEdgeIdList.sort()
-                # print(j, " ", self.nodeList[j].outEdgeIdList)
             line = file.readline()
+
 
         # print(self.userIdMap)
         # print(len(self.userIdMap))
-
+        # 这里显然可以改进！！！！！！！！！！！！！！！！
+        temp = len(self.nodeList)
+        for j in range(temp):
+            thisNode = self.nodeList[j]
+            self.nodeList[j].outEdgeIdList = []
+            for k in range(len(thisNode.outEdgeList)):
+                self.nodeList[j].outEdgeIdList.append(thisNode.outEdgeList[k].id)
+            self.nodeList[j].outEdgeIdList.sort()
+            # print(j, " ", self.nodeList[j].outEdgeIdList)
         print("Load", count, "users in total")
         return 0
 
@@ -240,20 +254,27 @@ class DataLoader(object):
         line = file.readline()
         count = 0
         notfound = 0
+        # while line:
+        #     line = file.readline()
+        #     count = count + 1
+        #     if count % 100000 == 0:
+        #         print (count)
         while line:
-            tokens = line.strip().split(" ")
+            tokens = line.strip().split("\t")
             # print(line)
             if len(tokens) < 1:
                 continue
             count = count + 1
-            if count % 100000 == 1:
+            if count % 100000 == 0:
+                break
                 print("Loading", count, "th line in Diffusion")
 
             pid = len(self.postList)    # postList is a list containing posts
             t = eval(tokens[1])         # first attribute in a line
             uid = self.GetUserId(tokens[2])#-----------------这句话OK了么？
             if uid == -1:
-                nofound = nofound + 1
+                notfound = notfound + 1
+                line = file.readline()
                 continue
             
             post = Post()       # create a new Post()
@@ -268,9 +289,11 @@ class DataLoader(object):
                 sid = self.GetPostId(tokens[3])
             
             if len(tokens[5]) > 1 & self.GetPostId(tokens[5]) == -1 :
+                line = file.readline()
                 continue
             
             if sid == -1:
+                line = file.readline()
                 continue
             
             post.sourceId = self.GetOrInsertSourceId(sid) # ----------
@@ -299,6 +322,8 @@ class DataLoader(object):
             post = self.postList[i]
             post.influencedBy = []
             user = post.user
+            #if i % 100 == 0:
+                 #print(i, 'influence', len(user.outEdgeList) )
             if self.postList[i].sourcePost.id != self.postList[i].id:
                 # if this post is not original
                 # search user's followees, get where this post is from
@@ -320,18 +345,26 @@ class DataLoader(object):
                 p = target.GetPostIdBySource(post.sourcePost.id)
                 if p == -1:
                     self.postList[i].inactiveNeighbors += 1
+
+        print("Load", count, "posts in total")
                 
     
     
     def LoadFeature(self, filedir): 
         file = open(filedir)
         line = file.readline()
+        count = 0
+        print('#########loading feature##########')
         while line :
+            count = count + 1
+            if count % 100000 == 0:
+                print('loading', count, 'feature')
             tokens = line.strip().split(" ")
 
             uid = tokens[0]
             uid = self.GetUserId(uid)
             if uid == -1:
+                line = file.readline()
                 continue
             
             val = eval(tokens[1])
@@ -339,6 +372,7 @@ class DataLoader(object):
             # print(len(self.nodeList))
             self.nodeList[uid - 1].featureList.append(val + 1e-10)
             line = file.readline()
+        print('End of loading feature')
         return 0
 
     def GetUserId(self, key):

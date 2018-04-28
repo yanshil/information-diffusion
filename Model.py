@@ -80,8 +80,8 @@ class model(object):
         self.nur = [[0 for i in range(self.roleNum)] for i in range(self.V)]
         self.nr = [0]* self.roleNum
         self.nu = [0]* self.V
-        self.sumz_v = [[0 for i in range(self.V)] for i in range(self.S)]
-        self.sumt_v = [[0 for i in range(self.V)] for i in range(self.S)]
+        self.sumz_v = [{} for i in range(self.S)]
+        self.sumt_v = [{} for i in range(self.S)]
         self.E = [[0 for i in range(self.K)] for i in range(self.V)]
         self.nz_t = [[0 for i in range(self.K)] for i in range(self.roleNum)]
         self.nrz = [[0]]* self.roleNum
@@ -93,8 +93,6 @@ class model(object):
         self.tau2 = ( self.instanceNum + 0.0) / 2.0
         self.tau3 = 0.0
         self.tau0 = 0.0
-
-
 
         for v in range(0,self.V):
             for t in range (0,self.K):
@@ -136,8 +134,9 @@ class model(object):
                 self.Z[i].append(0)
 
         for s in range (0,self.S):
-            self.sumz_v[s].append([0]*self.V)
-            self.sumt_v[s].append([0]*self.V)
+            pass
+            # self.sumz_v[s].append([0]*self.V)
+            # self.sumt_v[s].append([0]*self.V)
             # for v in range(0,V): 
             #     sumz_v[s][v] = 0
             #     sumt_v[s][v] = 0
@@ -158,6 +157,7 @@ class model(object):
                 if ((pid != -1) & (tiv < tiu)):
                     continue
                 v = target.id
+                self.checkOrInitSum(sid, v);
                
                 y = 1
                 if (pid == -1):
@@ -289,9 +289,16 @@ class model(object):
         del p
         return sample
 
+    def checkOrInitSum(self, sid, v):
+        if not self.sumz_v[sid].__contains__(v):
+            self.sumz_v[sid][v] = 0
+        if not self.sumt_v[sid].__contains__(v):
+            self.sumt_v[sid][v] = 0
+
     def  SampleDiffusion(self):     	    
         for i in range(0,len(self.postList)):
-        
+            if i % 10 == 0:
+                print('sampling', i, ' diffusion')      
             post = self.postList[i]
             source = post.user
             u = source.id
@@ -310,6 +317,8 @@ class model(object):
                 #if (pid != -1 & tiv - tiu - 1 >= maxTime)
                 #    print('Time Exceeds!\n')
                 v = target.id
+                self.checkOrInitSum(sid, v)
+
                 old_r = self.R[i][j]
                 old_t = self.T[i][j]
                 old_z = self.Z[i][j]
@@ -428,7 +437,8 @@ class model(object):
         self.V = len(self.nodeList)  #the number of users
         self.M = len(self.postList) #the number of post
         self.S = len(dataLoader.sourceIdMap) #the number of source post
-        self.K = len(Node(dataLoader.nodeList[0]).featureList) #pagerank & network constraint
+        self.K = len(dataLoader.nodeList[1].featureList) #pagerank & network constraint
+        self.K = 2 #  这里什么情况？
         print('#source posts: %d, #users: %d, #posts: %d\n', self.S, self.V, self.M)   
 
     def  GibbsSampling( self,maxIter,   BURN_IN,   SAMPLE_LAG):
@@ -673,9 +683,6 @@ class model(object):
                         maxR = r
                 #unactive users
                 prob = self.rho[maxR] * math.pow(1 - self.Lambda[maxR], self.maxTime - 1) + (1 + self.rho[maxR])
-                print('sid', sid, 'v', v)
-                print(res)
-                print('fuck', res[sid][v], sid)
                 res[sid][v] *= prob
             
         
@@ -866,4 +873,11 @@ class model(object):
             allC += C[r]
         for r in range(0,self.roleNum):
             print('%.5lf'%((C[0] + 0.0) / allC))
+        
+
+
+                    
+
+
+
     

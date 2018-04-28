@@ -18,10 +18,10 @@ BETA_1 = 1
 GAMMA_0 = 1
 GAMMA_1 = 1
 
-NETWORK_FILE_DIR = "./sample_data/TestNetwork.txt"
-DIFFUSION_FILE_DIR = "./sample_data/TestPost.txt"
-NETWORK_CONSTRAINT_FILE_DIR = "./sample_data/TestNc.txt"
-PAGE_RANK_FILE_DIR = "./sample_data/TestPr.txt"
+NETWORK_FILE_DIR = "./sample_data/10percentage_network.txt"
+DIFFUSION_FILE_DIR = "./sample_data/10percentage_posts.txt"
+NETWORK_CONSTRAINT_FILE_DIR = "./sample_data/nc.txt"
+PAGE_RANK_FILE_DIR = "./sample_data/pr.txt"
 MODEL_FILE_DIR = "model.txt"
 # 这玩意可以写成参数形式
 
@@ -48,8 +48,8 @@ model.maxTime = MAX_DELAY_TIME
 
 test = Test()
 test.model = model
-test.TrueSize()
-test.TrueDuration()
+#test.TrueSize()
+#test.TrueDuration()
 
 if TEST_METHOD == 0 :
     model.GibbsSampling(MAX_ITER, BURN_IN, SAMPLE_LAG) # BURN_IN = 5, SAMPLE_LAG = 5
