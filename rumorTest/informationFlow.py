@@ -52,7 +52,7 @@ class Net(object):
         #         对于每一个消息源头,先随机生成一次图
         #         根据随机生成的图跑一次最短路径算法
         #         得到每一个节点收到消息的时间,没收到用大数表示
-        MaxTime = 50
+        MaxTime = 72
         Rec = np.zeros([self.Num, MaxTime])
         politicRed = np.zeros([self.Num, MaxTime])
         politicBlue = np.zeros([self.Num, MaxTime])

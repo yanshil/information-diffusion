@@ -82,24 +82,28 @@ def main(path="./Graph2k.pickle"):
     pr = nx.pagerank_numpy(g)
     pr = sorted(pr, key=lambda key: pr[key], reverse=True)
     print("%f s: Get pagerank and sort user according to it. " % (time()-start_time))
+    selected_by_pagerank = pr[:50]
 
     # # time for calculate network constraint is so long!!! I give up.
     # nc = nx.constraint(g)
     # nc = sorted(nc, key=lambda key: nc[key], reverse=True)
     # print("%f s: Get network constraint and sort user according to it. " % (time()-start_time))
 
-    influence = dfs(g, pr[:100])
+    influence = dfs(g, pr[:200])
     big_name = sorted(influence, key=lambda key: influence[key], reverse=True)
     print("%f s: Get influence of each celebrity. " % (time()-start_time))
-    selected = big_name[:50]
+    selected_by_influence = big_name[:50]
 
     # Stochastic policy
-    blue_sources = list(choice(list(set(g.nodes)-set(selected)), 50))
+    blue_sources = list(choice(list(set(g.nodes)-set(selected_by_influence)-set(selected_by_pagerank)), 50))
     red_sources = list(choice(list(set(g.nodes)-set(blue_sources)), 50))
     simu_and_plot(net, red_sources+blue_sources, [1] * 50 + [0] * 50, "Stochastic")
 
     # our policy
-    simu_and_plot(net, selected + blue_sources, [1] * 50 + [0] * 50, "Designed")
+    simu_and_plot(net, selected_by_influence + blue_sources, [1] * 50 + [0] * 50, "Influence")
+
+    # pagerank policy
+    simu_and_plot(net, selected_by_pagerank + blue_sources, [1] * 50 + [0] * 50, "PageRank")
 
 
 if __name__ == '__main__':
