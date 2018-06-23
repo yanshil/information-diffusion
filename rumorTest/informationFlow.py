@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 get_ipython().magic(u'matplotlib inline')
 from random import *
 import pickle
+import math
 
 Inf = 999999
 
@@ -61,7 +62,7 @@ class Net(object):
             for edge in self.EdgeList:
                 weightn[edge] = self.delayTime[edge] if random()>self.Eprob[edge] else Inf
             nx.set_edge_attributes(self.G,weightn,name='weightn')
-            SpreadTime = nx.shortest_path_length(self.G,source=source,weight='weightn')
+            SpreadTime = nx.shortest_path_length(self.G.reverse(copy=False),source=source,weight='weightn')
             for (person,time) in SpreadTime.items():
                 if time < MaxTime:
                     Rec[person][time:] += 1 
@@ -119,13 +120,13 @@ def mulDiGraph2DiGraph(M):
     return G;
 
 if __name__ == '__main__':
-    popNum = 100000
+    popNum = 2000
     sourceNum = 100
     
     # Gra = nx.fast_gnp_random_graph(popNum,0.05,seed=None,directed=True)
     # Gra = nx.scale_free_graph(popNum)
     # Gra = mulDiGraph2DiGraph(Gra)
-    Gra = nx.read_gpickle('./Graph100k.pickle')
+    Gra = nx.read_gpickle('./Graph2k.pickle')
     print("after loading graph from pickle")
     net = Net(Gra)
     # net.Show()
@@ -133,9 +134,12 @@ if __name__ == '__main__':
     
     cmap = plt.cm.get_cmap('rainbow',1000)
     sourceList   = [randint(0,popNum-1) for i in range(sourceNum)]
-    poliTendency  = [randint(0,1) for i in range(sourceNum)] # 0 for red and 1 for blue
+    # print(sourceList)
+    poliTendency  = np.array([0*i for i in range(math.floor(sourceNum/2))])
+    poliTendency  = np.append(np.array([1**i for i in range(math.floor(sourceNum/2))]), np.array([0*i for i in range(math.floor(sourceNum/2))])) # 0 for red and 1 for blue
+    # print(poliTendency)
     Rec, poliRed, poliBlue = net.Spread(sourceList, poliTendency)
-    plt.imshow(Rec,interpolation='nearest',cmap=cmap,aspect='auto')
+    plt.imshow(np.sort(Rec, axis = 0),interpolation='nearest',cmap=cmap,aspect='auto')
     plt.colorbar()
     plt.xlabel('Time')
     plt.ylabel('User ID')
