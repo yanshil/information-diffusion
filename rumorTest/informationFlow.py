@@ -14,7 +14,7 @@ import networkx as nx
 import numpy as np
 from IPython import get_ipython
 
-get_ipython().magic(u'matplotlib inline')
+# get_ipython().magic(u'matplotlib inline')
 from numpy.random import (random, randint, seed)
 import math
 
