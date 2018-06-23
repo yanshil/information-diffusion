@@ -5,8 +5,13 @@ import numpy as np
 from queue import Queue
 from time import time
 from typing import List
+from numpy.random import (random, randint, seed, choice)
+import matplotlib.pyplot as plt
+import os
 
 from informationFlow import Net
+
+seed(1)
 
 
 def dfs(g: nx.DiGraph, sources: List):
@@ -34,6 +39,37 @@ def dfs(g: nx.DiGraph, sources: List):
     return influence
 
 
+def simu_and_plot(net: Net, source: List, tendency: List, name="temp", path="./picture", show=False):
+    Rec, politicRed, politicBlue = net.Spread(source, tendency)
+    print("%f s: Simulation %s. " % (time() - start_time, name))
+
+    # figure for spread
+    cmap = plt.cm.get_cmap('rainbow', 100)
+    plt.imshow(np.sort(Rec, axis=0), interpolation='nearest', cmap=cmap, aspect='auto', vmin=0, vmax=35)
+    plt.colorbar()
+    plt.xlabel('Time')
+    plt.ylabel('User ID')
+    plt.title('Receiving Message Situation for All Users')
+    plt.savefig(os.path.join(path, name+"_spread.png"))
+    if show:
+        plt.show()
+    else:
+        plt.clf()
+
+    # figure for result
+    PoliMap = net.Change(Rec, politicRed, politicBlue)
+    plt.plot(PoliMap)
+    plt.xlabel('Time')
+    plt.ylabel('Political Value')
+    plt.title('Political Attitude')
+    plt.axis([0, Rec.shape[1], 0, 1])
+    plt.savefig(os.path.join(path, name + "_result.png"))
+    if show:
+        plt.show()
+    else:
+        plt.clf()
+
+
 def main(path="./Graph2k.pickle"):
     global start_time
     start_time = time()
@@ -44,12 +80,26 @@ def main(path="./Graph2k.pickle"):
     print("%f s: Prepare delay time and prob. " % (time()-start_time))
 
     pr = nx.pagerank_numpy(g)
-    pr = sorted(pr, key=lambda key: pr[key])
+    pr = sorted(pr, key=lambda key: pr[key], reverse=True)
     print("%f s: Get pagerank and sort user according to it. " % (time()-start_time))
 
-    indegree = [g.in_degree[node] for node in pr]
-    influence = dfs(g, pr[:20])
-    pass
+    # # time for calculate network constraint is so long!!! I give up.
+    # nc = nx.constraint(g)
+    # nc = sorted(nc, key=lambda key: nc[key], reverse=True)
+    # print("%f s: Get network constraint and sort user according to it. " % (time()-start_time))
+
+    influence = dfs(g, pr[:100])
+    big_name = sorted(influence, key=lambda key: influence[key], reverse=True)
+    print("%f s: Get influence of each celebrity. " % (time()-start_time))
+    selected = big_name[:50]
+
+    # Stochastic policy
+    blue_sources = list(choice(list(set(g.nodes)-set(selected)), 50))
+    red_sources = list(choice(list(set(g.nodes)-set(blue_sources)), 50))
+    simu_and_plot(net, red_sources+blue_sources, [1] * 50 + [0] * 50, "Stochastic")
+
+    # our policy
+    simu_and_plot(net, selected + blue_sources, [1] * 50 + [0] * 50, "Designed")
 
 
 if __name__ == '__main__':
