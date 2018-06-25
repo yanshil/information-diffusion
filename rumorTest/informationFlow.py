@@ -52,7 +52,7 @@ class Net(object):
         #         对于每一个消息源头,先随机生成一次图
         #         根据随机生成的图跑一次最短路径算法
         #         得到每一个节点收到消息的时间,没收到用大数表示
-        MaxTime = 72
+        MaxTime = 100
         Rec = np.zeros([self.Num, MaxTime])
         politicRed = np.zeros([self.Num, MaxTime])
         politicBlue = np.zeros([self.Num, MaxTime])
@@ -87,7 +87,7 @@ class Net(object):
         # PoliChange[:, 1:] = np.minimum(1, PoliChange[:, 0:-1] + 0.05 * Rec[:, 1:])
         for t in range(n - 1):
             PoliChange[:, t + 1] = np.minimum(1, PoliChange[:, t] + 0.1 * politicRed[:, t + 1] - 0.1 * politicBlue[:,
-                                                                                                       t + 1])  # 越靠近1约red
+                                              t + 1])  # 越靠近1约red
 
         # TODO: 
         # 这里的改变我直接粗暴的乘了0.05

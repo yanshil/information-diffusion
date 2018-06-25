@@ -4,10 +4,12 @@ import networkx as nx
 import numpy as np
 from queue import Queue
 from time import time
-from typing import List
+from typing import (List, Any)
 from numpy.random import (random, randint, seed, choice)
 import matplotlib.pyplot as plt
 import os
+from moviepy.video.io.bindings import mplfig_to_npimage
+import moviepy.editor as mpy
 
 from informationFlow import Net
 
@@ -45,7 +47,7 @@ def simu_and_plot(net: Net, source: List, tendency: List, name="temp", path="./p
 
     # figure for spread
     cmap = plt.cm.get_cmap('rainbow', 100)
-    plt.imshow(np.sort(Rec, axis=0), interpolation='nearest', cmap=cmap, aspect='auto', vmin=0, vmax=35)
+    plt.imshow(np.sort(Rec, axis=0), interpolation='nearest', cmap=cmap, aspect='auto', vmin=0, vmax=43)
     plt.colorbar()
     plt.xlabel('Time')
     plt.ylabel('User ID')
@@ -68,6 +70,38 @@ def simu_and_plot(net: Net, source: List, tendency: List, name="temp", path="./p
         plt.show()
     else:
         plt.clf()
+    return Rec
+
+
+def develop(rec_1: np.ndarray, rec_2: np.ndarray, rec_3: np.ndarray, path="./picture"):
+    def count_times(rec: np.ndarray, maxcount: int):
+        c = np.zeros((maxcount, rec.shape[1]))
+        for t in range(rec.shape[1]):
+            for i in range(maxcount):
+                rec_temp = rec[:, t]
+                c[i, t] = rec_temp[rec_temp == i].size
+        return c
+
+    max_rec = np.max([rec_1, rec_2, rec_3])
+    rec_1 = count_times(rec_1, int(max_rec))
+    rec_2 = count_times(rec_1, int(max_rec))
+    rec_3 = count_times(rec_1, int(max_rec))
+
+    fig_mpl, ax = plt.subplots(1, figsize=(5, 3), facecolor='white')    # type: Any, plt.Axes
+    ax.set_title("Information spread")
+    ax.set_ylim(0, 10)
+    xx = np.linspace(1, max_rec, max_rec)
+    line = ax.plot(xx, rec_1[:, 0], xx, rec_2[:, 0], xx, rec_3[:, 0])    # type: List[plt.Line2D]
+    duration = rec_1.shape[1] / 20
+
+    def make_frame_mpl(t):
+        line[0].set_ydata(rec_1[:, int(round(t * 20))])
+        line[1].set_ydata(rec_2[:, int(round(t * 20))])
+        line[2].set_ydata(rec_3[:, int(round(t * 20))])
+        return mplfig_to_npimage(fig_mpl)
+
+    animation = mpy.VideoClip(make_frame_mpl, duration=duration)
+    animation.write_gif(os.path.join(path, "all.gif"), fps=20)
 
 
 def main(path="./Graph2k.pickle"):
@@ -80,31 +114,34 @@ def main(path="./Graph2k.pickle"):
     print("%f s: Prepare delay time and prob. " % (time()-start_time))
 
     pr = nx.pagerank_numpy(g)
-    pr = sorted(pr, key=lambda key: pr[key], reverse=True)
+    prlist = sorted(pr, key=lambda key: pr[key], reverse=True)
     print("%f s: Get pagerank and sort user according to it. " % (time()-start_time))
-    selected_by_pagerank = pr[:50]
+    selected_by_pagerank = prlist[:50]
 
     # # time for calculate network constraint is so long!!! I give up.
     # nc = nx.constraint(g)
     # nc = sorted(nc, key=lambda key: nc[key], reverse=True)
     # print("%f s: Get network constraint and sort user according to it. " % (time()-start_time))
 
-    influence = dfs(g, pr[:200])
+    influence = dfs(g, prlist[:500])
     big_name = sorted(influence, key=lambda key: influence[key], reverse=True)
     print("%f s: Get influence of each celebrity. " % (time()-start_time))
     selected_by_influence = big_name[:50]
+    temp = [pr[user] for user in selected_by_influence]
 
     # Stochastic policy
     blue_sources = list(choice(list(set(g.nodes)-set(selected_by_influence)-set(selected_by_pagerank)), 50))
     red_sources = list(choice(list(set(g.nodes)-set(blue_sources)), 50))
-    simu_and_plot(net, red_sources+blue_sources, [1] * 50 + [0] * 50, "Stochastic")
+    rec_1 = simu_and_plot(net, red_sources+blue_sources, [1] * 50 + [0] * 50, "Stochastic")
 
     # our policy
-    simu_and_plot(net, selected_by_influence + blue_sources, [1] * 50 + [0] * 50, "Influence")
+    rec_2 = simu_and_plot(net, selected_by_influence + blue_sources, [1] * 50 + [0] * 50, "Influence")
 
     # pagerank policy
-    simu_and_plot(net, selected_by_pagerank + blue_sources, [1] * 50 + [0] * 50, "PageRank")
+    rec_3 = simu_and_plot(net, selected_by_pagerank + blue_sources, [1] * 50 + [0] * 50, "PageRank")
 
+    # animation
+    develop(rec_1, rec_2, rec_3)
 
 if __name__ == '__main__':
     main()
