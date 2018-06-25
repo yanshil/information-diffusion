@@ -30,7 +30,7 @@ class Net(object):
         self.G = G
 
         # 随机生成各个点的政治属性
-        self.policy = {node: random() for node in self.PersonList}
+        self.policy = {node: random()*200-100 for node in self.PersonList}
         nx.set_node_attributes(self.G, self.policy, name='policy')  # 均匀分布（可调试）
         # 随机生成每条边的延迟时间
         self.delayTime = {edge: randint(1, 10) for edge in self.EdgeList}
@@ -86,18 +86,14 @@ class Net(object):
             PoliChange[person, 0] = self.policy[person]
         # PoliChange[:, 1:] = np.minimum(1, PoliChange[:, 0:-1] + 0.05 * Rec[:, 1:])
         for t in range(n - 1):
-            PoliChange[:, t + 1] = np.minimum(1, PoliChange[:, t] + 0.1 * politicRed[:, t + 1] - 0.1 * politicBlue[:,
-                                              t + 1])  # 越靠近1约red
-
-        # TODO: 
-        # 这里的改变我直接粗暴的乘了0.05
-        # 这个函数需要好好想想
+            PoliChange[:, t + 1] = np.clip(PoliChange[:, t] + 0.1*politicRed[:, t+1] - 0.1*politicBlue[:, t+1],
+                                           -1000, 1000)     # 越靠近1约red
+        PoliChange = 1/(1+np.exp(-0.01*PoliChange))
+        # TODO:
         # p.s. 上面这句话怎么向量化。。。 如何用generator遍历dict?
-        PoliMap = np.zeros(n)
-        for t in range(n):
-            PoliMap[t] = len(np.where(PoliChange[:, t] < 0.5)[0])
+        PoliMap = np.average(PoliChange, 0)
 
-        return PoliMap / self.Num
+        return PoliMap
 
     def Show(self):
         plt.figure(figsize=(18, 18))

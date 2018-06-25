@@ -13,11 +13,15 @@ import moviepy.editor as mpy
 
 from informationFlow import Net
 
-seed(1)
+seed(0)
 
 
 def dfs(g: nx.DiGraph, sources: List):
     influence = {s: 0 for s in sources}
+    weight = nx.get_node_attributes(g, "policy")
+    weight = list(weight.values())
+    weight = np.array(weight)
+    weight = 0.01*np.exp(-0.01*weight)/np.square(1+np.exp(-0.01*weight))
     for s in sources:
         count = 0
         arrive = np.zeros(nx.number_of_nodes(g))
@@ -35,13 +39,14 @@ def dfs(g: nx.DiGraph, sources: List):
                     tocheck.put_nowait(v)
                 else:
                     arrive[v] = 1-(1-arrive[v])*(1-arrive[u]*g[v][u]["Eprob"])
-        influence[s] = np.sum(arrive)
+        influence[s] = np.sum(arrive*weight)
         print("%f s: Influence of user %d is %f. He influences %d people. "
               % (time()-start_time, s, influence[s], count))
     return influence
 
 
 def simu_and_plot(net: Net, source: List, tendency: List, name="temp", path="./picture", show=False):
+    seed(0)
     Rec, politicRed, politicBlue = net.Spread(source, tendency)
     print("%f s: Simulation %s. " % (time() - start_time, name))
 
@@ -64,7 +69,7 @@ def simu_and_plot(net: Net, source: List, tendency: List, name="temp", path="./p
     plt.xlabel('Time')
     plt.ylabel('Political Value')
     plt.title('Political Attitude')
-    plt.axis([0, Rec.shape[1], 0, 1])
+    # plt.axis([0, Rec.shape[1], 0.45, 0.55])
     plt.savefig(os.path.join(path, name + "_result.png"))
     if show:
         plt.show()
@@ -127,21 +132,33 @@ def main(path="./Graph2k.pickle"):
     big_name = sorted(influence, key=lambda key: influence[key], reverse=True)
     print("%f s: Get influence of each celebrity. " % (time()-start_time))
     selected_by_influence = big_name[:50]
-    temp = [pr[user] for user in selected_by_influence]
 
     # Stochastic policy
     blue_sources = list(choice(list(set(g.nodes)-set(selected_by_influence)-set(selected_by_pagerank)), 50))
     red_sources = list(choice(list(set(g.nodes)-set(blue_sources)), 50))
     rec_1 = simu_and_plot(net, red_sources+blue_sources, [1] * 50 + [0] * 50, "Stochastic")
+    cost_1 = [pr[user] for user in red_sources+blue_sources]
+    cost_1 = np.array(cost_1)
+    cost_1 = np.sum(np.exp(100*cost_1))
+    print(cost_1)
 
     # our policy
     rec_2 = simu_and_plot(net, selected_by_influence + blue_sources, [1] * 50 + [0] * 50, "Influence")
+    cost_2 = [pr[user] for user in selected_by_influence + blue_sources]
+    cost_2 = np.array(cost_2)
+    cost_2 = np.sum(np.exp(100*cost_2))
+    print(cost_2)
 
     # pagerank policy
     rec_3 = simu_and_plot(net, selected_by_pagerank + blue_sources, [1] * 50 + [0] * 50, "PageRank")
+    cost_2 = [pr[user] for user in selected_by_pagerank + blue_sources]
+    cost_3 = np.array(cost_2)
+    cost_3 = np.sum(np.exp(100*cost_3))
+    print(cost_3)
 
     # animation
-    develop(rec_1, rec_2, rec_3)
+    # develop(rec_1, rec_2, rec_3)
+
 
 if __name__ == '__main__':
     main()
