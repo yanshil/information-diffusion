@@ -560,12 +560,10 @@ class model(object):
     def  PrintTheta(self):
      	   
         fout = open('model_theta.txt', 'w')
-        for v in range(0,self.V):
-        
-            print(fout+'%s'%str(self.nodeList[v].name))
+        for v in range(0,self.V):        
+            fout.write('%s'%str(self.nodeList[v].name))
             for r in range(0, self.roleNum):
-                print(fout, '%.5lf '%self.theta[v][r])
-            print(fout)
+                fout.write( '%.5lf '%self.theta[v][r])
 
         fout.close()
 
@@ -576,28 +574,20 @@ class model(object):
         self.SaveGaussian()
         fout = open(fileDir, 'w')
         for r in range(0, self.roleNum):
-            print(fout, '%.10lf '%self.rho[r])
-        print(fout)
+            fout.write('%.10lf '%self.rho[r])
         for r in range(0, self.roleNum):
-            print(fout, '%.10lf '%self.Lambda[r])
-        print(fout)
+            fout.write('%.10lf '%self.Lambda[r])
         for r in range(0, self.roleNum):
             for t in range(0,self.K):
-                print(fout, '%.10lf '%self.mu[r][t])
-            
-            print(fout)
+                fout.write('%.10lf '%self.mu[r][t])
         
         for r in range(0, self.roleNum):
-        
             for t in range(0,self.K):
-                print(fout, '%.10lf '%self.delta[r][t])
-            print(fout)
+                fout.write('%.10lf '%self.delta[r][t])
         
         for v in range(0,self.V):
-        
             for r in range(0, self.roleNum):
-                print(fout, '%.10lf '%self.theta[v][r])
-            print(fout)
+                fout.write(f'%.10lf '%self.theta[v][r])
         
         fout.close()
   
@@ -608,35 +598,34 @@ class model(object):
         for r in range(0,self.roleNum):
             for t in range(0,self.K):
                 fout.write('%.5lf '%self.mu[r][t])
-            #fout.write('\n')
+            fout.write('\n')
 
         fout.write('Deviation:')
         for r in range(0,self.roleNum):
             for t in range(0,self.K): 
-                print(fout, '%.5lself.f '%self.delta[r][t])
-            print(fout, '\n')
+                fout.write('%.5lself.f '%self.delta[r][t])
+            fout.write('\n')
         fout.close()
 
     def  SaveRho(self):
      	    
         fout = open('model_rho.txt', 'w')
-        print(fout, 'Rho:')
+        fout.write(fout, 'Rho:')
         for r in range(0, self.roleNum):
-            print(fout, '%.10lf '%self.rho[r])
-        print(fout, '\nLambda:\n')
+            fout.write('%.10lf '%self.rho[r])
+        fout.write('\nLambda:\n')
         for r in range(0, self.roleNum):
-            print(fout, '%.10lf '%self.Lambda[r])
-        print(fout, '\n')
+            fout.write('%.10lf '%self.Lambda[r])
+        fout.write('\n')
         fout.close()
         
     def  SaveTheta(self):
      	    
         fout = open('model_theta.txt', 'w')
         for v in range(0,self.V):
-        
-            print(fout, '%s'%str(self.nodeList[v].name))
+            fout.write('%s'%str(self.nodeList[v].name))
             for r in range(0, self.roleNum):
-                print(fout, '%.5lf '%self.theta[v][r])
+                fout.write('%.5lf '%self.theta[v][r])
             
         
         fout.close()
