@@ -610,7 +610,7 @@ class model(object):
     def  SaveRho(self):
      	    
         fout = open('model_rho.txt', 'w')
-        fout.write(fout, 'Rho:')
+        fout.write('Rho:')
         for r in range(0, self.roleNum):
             fout.write('%.10lf '%self.rho[r])
         fout.write('\nLambda:\n')
